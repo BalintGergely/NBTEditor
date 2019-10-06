@@ -1,0 +1,14 @@
+We will make all classes specialize
+
+NBTEditor
+Responsible for interacting with the user, and managing the main thread on an event queue.
+
+TagTreeModel
+Responsible for ANY interaction with the underlying Tag data structure including modifications.
+Can only be modified from the main thread, so it shares the same event queue with NBTEditor.
+
+FileTreeNode
+Responsible for representing a file or directory in the filesystem as a tag, and hosts all IO operations on the file.
+
+Huff puff.......
+need to write my own undo manager too
