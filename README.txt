@@ -10,14 +10,10 @@ What can it do safely:
 --Hex edit types 7 11 and 12
 --Write/load raw file content as tags of type 7,11 or 12
 -Encode and decode data in GZIP or ZLIB
--Create NBT files in GZIP encoding
+-Create NBT files
 -Undo-Redo operations, undo-able edit manager up to 256 edits, efficiently.
 
 What can it do unsafely:
 -Open a folder and multiple files in it at once (Glitches rarely)
 -Load and display the MCRegion file format
 -It can finally correctly save them too!
-
-What it can't do:
--Create files with NBT formats of different encoding
--Write proper region file
