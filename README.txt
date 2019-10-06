@@ -16,9 +16,7 @@ What can it do safely:
 What can it do unsafely:
 -Open a folder and multiple files in it at once (Glitches rarely)
 -Load and display the MCRegion file format
-
-What it does wrong:
--Write Region files (The output format can not be recognized by MC)
+-It can finally correctly save them too!
 
 What it can't do:
 -Create files with NBT formats of different encoding
