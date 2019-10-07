@@ -2,8 +2,6 @@ An NBT editor for files with the NBT format
 
 NBT stands for NamedBinaryTag
 
-Accepts program argument "demo" to automatically generate and open a demonstration file. (Deprecated)
-
 What can it do safely:
 -Edit files with NBT format
 --Create/edit/delete any tag with type identifier 1 to 12
