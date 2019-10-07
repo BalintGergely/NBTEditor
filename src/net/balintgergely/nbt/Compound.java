@@ -25,4 +25,12 @@ public final class Compound extends Container<NamedTag<?>>{
 		}
 		return NBTType.COMPOUND.name+" of "+s+(s == 1 ? " tag" : " tags");
 	}
+	public NamedTag<?> forName(CharSequence name){
+		for(NamedTag<?> tag : this){
+			if(tag.getName().equals(name)){
+				return tag;
+			}
+		}
+		return null;
+	}
 }
