@@ -10,8 +10,5 @@ What can it do safely:
 -Encode and decode data in GZIP or ZLIB
 -Create NBT files
 -Undo-Redo operations, undo-able edit manager up to 256 edits, efficiently.
-
-What can it do unsafely:
--Open a folder and multiple files in it at once (Glitches rarely)
--Load and display the MCRegion file format
--It can finally correctly save them too!
+-Open a folder and multiple files in it at once
+-Edit the mc region format
