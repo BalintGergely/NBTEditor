@@ -1,11 +1,17 @@
 package net.balintgergely.nbt;
 
+import java.nio.CharBuffer;
+
 public class Tag<E>{
 	protected E value;
 	/**
 	 * Can only be null if getClass() is from something other than g.nbt
 	 */
 	public final NBTType TYPE;
+	@SuppressWarnings("unchecked")
+	Tag(CharBuffer cbuf) {
+		TYPE = NBTType.parseSNBT((Tag<Object>)this, cbuf);
+	}
 	protected Tag(){
 		TYPE = null;
 	}

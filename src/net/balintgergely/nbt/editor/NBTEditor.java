@@ -2,6 +2,9 @@ package net.balintgergely.nbt.editor;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -40,21 +43,23 @@ import net.balintgergely.nbt.editor.TagEditState.TagIndexEdit;
 public class NBTEditor extends JFrame{
 	private static final long serialVersionUID = 1L;
 	public static final int REGION = 13,SAVE = 14,SAVE_AS = 15,LOAD = 16,RELOAD = 17,DELETE = 18,UNDO = 19,REDO = 20,
-			UP = 21,DOWN = 22,PENCIL = 23;
+			UP = 21,DOWN = 22,PENCIL = 23,COPY = 24,PASTE = 25;
 	public static final String 
 			NEW_COMMAND = "N",
 			SAVE_COMMAND = "SV",
 			SAVE_AS_COMMAND = "SVS",
 			LOAD_COMMAND = "L",
 			RELOAD_COMMAND = "RL",
+			NEW_REGION_COMMAND = "REGION",
 			DELETE_COMMAND = "D",
 			UP_COMMAND = "UP",
 			DOWN_COMMAND = "DOWN",
 			EDIT_COMMAND = "EDT",
 			UNDO_COMMAND = "Z",
 			REDO_COMMAND = "Y",
-			ADD_PREFIX = "+",
-			REGION_SUFFIX = "REGION";
+			COPY_COMMAND = "C",
+			PASTE_COMMAND = "V",
+			ADD_PREFIX = "+";
 	public static void main(String[] atgs) throws Throwable{
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		final NBTEditor editor = new NBTEditor();
@@ -89,9 +94,10 @@ public class NBTEditor extends JFrame{
 	private final ImageIcon[] icons;
 	
 	private NBTEditor(){
+		super("NBTEditor github.com/BalintGergely/NBTEditor");
 		try{
 			DataInputStream in = new DataInputStream(getClass().getResourceAsStream("NBTEditor$assets.dll")); //$NON-NLS-1$
-			icons = new ImageIcon[24];
+			icons = new ImageIcon[26];
 			int i = 0;
 			BufferedImage lz = null;
 			while(i < icons.length){
@@ -141,13 +147,18 @@ toolBar.add(				configButton(al,icons[0],		"New",							NEW_COMMAND));
 toolBar.add(				configButton(al,icons[LOAD],	"Select file or directory",		LOAD_COMMAND));
 toolBar.add(reloadButton =	configButton(al,icons[RELOAD],	"Reload and discard changes",	RELOAD_COMMAND));
 toolBar.add(saveButton =	configButton(al,icons[SAVE],	"Save every modified file",		SAVE_COMMAND));
-toolBar.add(saveAsButton =	configButton(al,icons[SAVE_AS],"Save to a different file",		SAVE_AS_COMMAND));
+toolBar.add(saveAsButton =	configButton(al,icons[SAVE_AS],	"Save to a different file",		SAVE_AS_COMMAND));
+toolBar.add(regionButton =	configButton(al,icons[REGION],	"Region",						NEW_REGION_COMMAND));
 
 toolBar.addSeparator();
 
 toolBar.add(undoButton =	configButton(al,icons[UNDO],	null,		UNDO_COMMAND));
 toolBar.add(redoButton =	configButton(al,icons[REDO],	null,		REDO_COMMAND));
 updateButtons();
+
+toolBar.addSeparator();
+
+toolBar.add(				configButton(al,icons[COPY],	"Copy SNBT",COPY_COMMAND));
 
 toolBar.addSeparator();
 
@@ -167,8 +178,6 @@ toolBar.addSeparator();
 			}
 			i++;
 		}
-
-toolBar.add(regionButton = configButton(al,icons[REGION],"Region",ADD_PREFIX+REGION_SUFFIX));
 		
 		toolBar.addSeparator();
 		progressBar = new JProgressBar(0, 1);
@@ -182,7 +191,7 @@ toolBar.add(regionButton = configButton(al,icons[REGION],"Region",ADD_PREFIX+REG
 		tagTree.setCellEditor(editor = new TagTreeCellEditor(this));
 		tagTree.setRowHeight(-1);
 		tagTree.setEditable(true);
-		tagTree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
+		tagTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		tagTree.setInvokesStopCellEditing(true);
 		tagTree.addTreeSelectionListener((TreeSelectionEvent e) -> {
 			TreePath p = e.getPath();
@@ -317,6 +326,20 @@ toolBar.add(regionButton = configButton(al,icons[REGION],"Region",ADD_PREFIX+REG
 					}
 				}
 			}break;
+		case COPY_COMMAND:
+			pt = tagTree.getSelectionPath();
+			Object obj = pt.getLastPathComponent();
+			if(obj instanceof Tag){
+				Object data = ((Tag<?>)obj).getValue();
+				NBTType clazz;
+				if(data == null || (clazz = NBTType.forClass(data.getClass())) == null){
+					break;
+				}
+				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+				StringSelection selection = new StringSelection(clazz.toSNBT(data));
+				clipboard.setContents(selection, selection);
+			}
+			break;
 		case DOWN_COMMAND:up = false;
 			//$FALL-THROUGH$
 		case UP_COMMAND:tagTree.stopEditing();
@@ -337,55 +360,51 @@ toolBar.add(regionButton = configButton(al,icons[REGION],"Region",ADD_PREFIX+REG
 			}break;
 		default:tagTree.stopEditing();
 			if(str.startsWith(ADD_PREFIX)){
-				if(str.endsWith(REGION_SUFFIX)){
-					//
-				}else{
-					pt = tagTree.getSelectionPath();
-					if(pt != null){
-						Object obj = pt.getLastPathComponent();
-						int index = -1;
-						if(obj instanceof Tag){
-							Tag<?> sub = ((Tag<?>)obj);
-							while(!(sub.getValue() instanceof Container)){
-								pt = pt.getParentPath();
-								if(pt == null){
+				pt = tagTree.getSelectionPath();
+				if(pt != null){
+					obj = pt.getLastPathComponent();
+					int index = -1;
+					if(obj instanceof Tag){
+						Tag<?> sub = ((Tag<?>)obj);
+						while(!(sub.getValue() instanceof Container)){
+							pt = pt.getParentPath();
+							if(pt == null){
+								return;
+							}
+							obj = pt.getLastPathComponent();
+							if(obj instanceof Tag<?>){
+								Object val = ((Tag<?>)obj).getValue();
+								if(val instanceof Container){
+									index = ((Container<?>)val).indexOf(sub);
+									sub = (Tag<?>)obj;
+								}else{
 									return;
 								}
-								obj = pt.getLastPathComponent();
-								if(obj instanceof Tag<?>){
-									Object val = ((Tag<?>)obj).getValue();
-									if(val instanceof Container){
-										index = ((Container<?>)val).indexOf(sub);
-										sub = (Tag<?>)obj;
-									}else{
-										return;
-									}
-								}
 							}
-							Container<?> container = (Container<?>)sub.getValue();
-							if(index < 0){
-								index = container.size();
+						}
+						Container<?> container = (Container<?>)sub.getValue();
+						if(index < 0){
+							index = container.size();
+						}
+						NBTType nt = null;
+						for(int i = 0;i < NBTType.TYPE_COUNT;i++){
+							nt = NBTType.get(i);
+							if(str.endsWith(nt.name)){
+								break;
+							}else{
+								nt = null;
 							}
-							NBTType nt = null;
-							for(int i = 0;i < NBTType.TYPE_COUNT;i++){
-								nt = NBTType.get(i);
-								if(str.endsWith(nt.name)){
-									break;
-								}else{
-									nt = null;
-								}
-							}
-							if(nt == null){
-								throw new IllegalStateException();
-							}
-							Tag<Object> tag = container instanceof TagList ? new Tag<>(nt,nt.defaultValue()) : new NamedTag<Object>(nt, StringUTF8.EMPTY, nt.defaultValue());
-							pt = pt.pathByAddingChild(tag);
-							TagEditState<?> st = TagEditState.createAddEdit(pt, index);
-							if(st != null && st.sanitize() == 1){
-								submitUndoableEdit(st,true);
-								tagTree.startEditingAtPath(pt);
-								editor.setUndoable(false);
-							}
+						}
+						if(nt == null){
+							throw new IllegalStateException();
+						}
+						Tag<Object> tag = container instanceof TagList ? new Tag<>(nt,nt.defaultValue()) : new NamedTag<Object>(nt, StringUTF8.EMPTY, nt.defaultValue());
+						pt = pt.pathByAddingChild(tag);
+						TagEditState<?> st = TagEditState.createAddEdit(pt, index);
+						if(st != null && st.sanitize() == 1){
+							submitUndoableEdit(st,true);
+							tagTree.startEditingAtPath(pt);
+							editor.setUndoable(false);
 						}
 					}
 				}

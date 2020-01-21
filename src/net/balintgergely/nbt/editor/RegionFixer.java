@@ -37,6 +37,7 @@ public class RegionFixer {
 						ch.save();
 					}
 					System.out.println("Modified "+modif+"/"+count+" chunks.");
+					region.defrag();
 				}
 			}
 		}

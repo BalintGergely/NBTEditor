@@ -26,7 +26,7 @@ public class Region implements Closeable,Iterable<net.balintgergely.nbt.Region.C
 	/**
 	 * Applies the default compression format to the output stream. This method
 	 * writes the format marker into the output stream and constructs a new compressor for it.
-	 * It is guaranteed that this method returns a FilterOutputStream with it's out variable set to the specified one.
+	 * It is guaranteed that this method returns a FilterOutputStream with it's out field set to the specified output stream.
 	 * @throws IOException If the specified output stream's write method does.
 	 */
 	public static FilterOutputStream defaultCompression(OutputStream out) throws IOException{
@@ -45,6 +45,12 @@ public class Region implements Closeable,Iterable<net.balintgergely.nbt.Region.C
 	private Chunk[] chunks;
 	private int chunkCount;
 	private BitSet sectorSet;
+	/**
+	 * Opens a region file for read and possibly write access.
+	 * @param file0 The file
+	 * @param write true if we open for read&write access, false if we open for read only.
+	 * @throws IOException
+	 */
 	public Region(File file0,boolean write) throws IOException {
 		boolean flag = file0.exists();
 		channel = new RandomAccessFile(file = file0, write ? "rwd" : "r");
@@ -224,7 +230,7 @@ public class Region implements Closeable,Iterable<net.balintgergely.nbt.Region.C
 		}
 		/**
 		 * Returns an OutputStream to write to the Chunk.<br>
-		 * The stream has the default compression and a capacity of 0x100000-5 bytes. It will discard all data
+		 * The stream has the default compression and a capacity of 0xFEFFB bytes. It will discard all data
 		 * if it's limit is broken. (All though it is possible for it to store more bytes depending on compression)<br>
 		 * The returned OutputStream <b>must be closed</b> in order to write it's content into the file. It will not close when it's finalize method is invoked.
 		 * @throws IOException If this Region is read-only.
@@ -435,8 +441,7 @@ public class Region implements Closeable,Iterable<net.balintgergely.nbt.Region.C
 			tail.element[offset++] = (byte)(b & 0xff);
 		}
 		/**
-		 * Warning: This method does not check if the arguments are legal because it is very unlikely to be called
-		 * directly from client code.
+		 * Warning: No bound checking here
 		 */
 		@Override
 		public synchronized void write(byte[] b, int off, int len) throws IOException {
@@ -456,7 +461,7 @@ public class Region implements Closeable,Iterable<net.balintgergely.nbt.Region.C
 					int ni = (len+0xFFF) & 0xFFFFF000;//Number of new sectors to be allocated
 					System.arraycopy(b, off, target, offset, diff);//Write first part into previous array
 					tail = tail.next = new Link<>(target = new byte[ni],null);//The next array can span multiple sectors if needed.
-					System.arraycopy(b, off+diff, target, 0, offset = len);//Write remainder into new array
+					System.arraycopy(b, off+diff, target, 0, offset = len);//Write remaining data into new array
 				}
 			}
 		}
@@ -465,7 +470,7 @@ public class Region implements Closeable,Iterable<net.balintgergely.nbt.Region.C
 		 * @throws IOException if that happens
 		 */
 		private void dieIfOverflow() throws IOException{
-			if(count >= 0xFFFFC){
+			if(count > 0xFEFFC){
 				tail = head = null;//No point in advancing if that's the case.
 				throw new IOException();
 			}
@@ -476,7 +481,7 @@ public class Region implements Closeable,Iterable<net.balintgergely.nbt.Region.C
 		 */
 		@Override
 		public synchronized void close() throws IOException {
-			if(count >= 0xFFFFC){
+			if(count > 0xFEFFC){
 				throw new IOException("Stream overflow!");
 			}
 			if(tail != null){

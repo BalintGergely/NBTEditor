@@ -1,7 +1,13 @@
 package net.balintgergely.nbt;
 
+import java.nio.CharBuffer;
+
 public class NamedTag<E> extends Tag<E>{
 	StringUTF8 name;
+	NamedTag(StringUTF8 name,CharBuffer cbuf) {
+		super(cbuf);
+		this.name = name;
+	}
 	public NamedTag(NBTType type,StringUTF8 name0,E value) {
 		super(type, value);
 		name = StringUTF8.valueOf(name0);

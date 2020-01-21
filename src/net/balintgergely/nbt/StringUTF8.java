@@ -92,8 +92,13 @@ public final class StringUTF8 implements CharSequence, Comparable<String>{
 		}
 		return false;
 	}
+	public void validate() {
+		if(!isValid()) {
+			throw new RuntimeException();
+		}
+	}
 	/**
-	 * Performs a very light check to see if this StringUTF8 can be, or is encoded into a sequence of bytes shorter than 0xffff
+	 * Performs a very light check to see if this StringUTF8 can be, or is encoded into a sequence of bytes not longer than 0xffff
 	 */
 	public boolean isValid(){
 		if(bytes != null){
@@ -243,8 +248,7 @@ public final class StringUTF8 implements CharSequence, Comparable<String>{
 		return new StringUTF8(Long.toString(lon));
 	}
 	public static StringUTF8 valueOf(char ch){
-		char[] c = new char[]{ch};
-		return new StringUTF8(null,c,new String(c));
+		return new StringUTF8(new char[]{ch});
 	}
 	public static StringUTF8 valueOf(float fl){
 		return new StringUTF8(Float.toString(fl));

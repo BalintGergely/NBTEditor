@@ -255,13 +255,13 @@ public class LongHeapSequence{
 		}
 		long val = 0;
 		switch(len%8){
-		case 7:	val |= buf[pos+6] << (8);//$FALL-THROUGH$
-		case 6:	val |= buf[pos+5] << (16);//$FALL-THROUGH$
-		case 5:	val |= buf[pos+4] << (24);//$FALL-THROUGH$
-		case 4:	val |= buf[pos+3] << (32);//$FALL-THROUGH$
-		case 3:	val |= buf[pos+2] << (40);//$FALL-THROUGH$
-		case 2:	val |= buf[pos+1] << (48);//$FALL-THROUGH$
-		case 1:	val |= buf[pos] << (56);
+		case 7:	val |= ((buf[pos+6] & 0xffl) << 8);//$FALL-THROUGH$
+		case 6:	val |= ((buf[pos+5] & 0xffl) << 16);//$FALL-THROUGH$
+		case 5:	val |= ((buf[pos+4] & 0xffl) << 24);//$FALL-THROUGH$
+		case 4:	val |= ((buf[pos+3] & 0xffl) << 32);//$FALL-THROUGH$
+		case 3:	val |= ((buf[pos+2] & 0xffl) << 40);//$FALL-THROUGH$
+		case 2:	val |= ((buf[pos+1] & 0xffl) << 48);//$FALL-THROUGH$
+		case 1:	val |= ((buf[pos] & 0xffl) << 56);
 				content[pos/8] = val;
 		}
 		size = len;
@@ -282,25 +282,25 @@ public class LongHeapSequence{
 		while(pos < lin){
 			long val = content[pos/8];
 			buf[pos+7] = (byte)(val);
-			buf[pos+6] = (byte)(val >> 8);
-			buf[pos+5] = (byte)(val >> 16);
-			buf[pos+4] = (byte)(val >> 24);
-			buf[pos+3] = (byte)(val >> 32);
-			buf[pos+2] = (byte)(val >> 40);
-			buf[pos+1] = (byte)(val >> 48);
-			buf[pos] = (byte)(val >> 56);
+			buf[pos+6] = (byte)(val >>> 8);
+			buf[pos+5] = (byte)(val >>> 16);
+			buf[pos+4] = (byte)(val >>> 24);
+			buf[pos+3] = (byte)(val >>> 32);
+			buf[pos+2] = (byte)(val >>> 40);
+			buf[pos+1] = (byte)(val >>> 48);
+			buf[pos] = (byte)(val >>> 56);
 			pos += 8;
 		}
 		if(pos < buf.length){
 			long val = content[pos/8];
 			switch(buf.length%8){
-			case 7:buf[pos+6] = (byte)(val >> 8);//$FALL-THROUGH$
-			case 6:buf[pos+5] = (byte)(val >> 16);//$FALL-THROUGH$
-			case 5:buf[pos+4] = (byte)(val >> 24);//$FALL-THROUGH$
-			case 4:buf[pos+3] = (byte)(val >> 32);//$FALL-THROUGH$
-			case 3:buf[pos+2] = (byte)(val >> 40);//$FALL-THROUGH$
-			case 2:buf[pos+1] = (byte)(val >> 48);//$FALL-THROUGH$
-			case 1:buf[pos] = (byte)(val >> 56);
+			case 7:buf[pos+6] = (byte)(val >>> 8);//$FALL-THROUGH$
+			case 6:buf[pos+5] = (byte)(val >>> 16);//$FALL-THROUGH$
+			case 5:buf[pos+4] = (byte)(val >>> 24);//$FALL-THROUGH$
+			case 4:buf[pos+3] = (byte)(val >>> 32);//$FALL-THROUGH$
+			case 3:buf[pos+2] = (byte)(val >>> 40);//$FALL-THROUGH$
+			case 2:buf[pos+1] = (byte)(val >>> 48);//$FALL-THROUGH$
+			case 1:buf[pos] = (byte)(val >>> 56);
 			}
 		}
 		return buf;
@@ -316,7 +316,7 @@ public class LongHeapSequence{
 			pos += 2;
 		}
 		if(pos < len){
-			content[pos/2] = ((long)buf[pos]) << 32;
+			content[pos/2] = (((long)buf[pos]) << 32);
 		}
 		size = s;
 	}
